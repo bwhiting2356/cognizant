@@ -73,7 +73,7 @@ function getFilmRecommendations(req, res) {
 
   if (isNaN(id)) {
     res.statusCode = 422;
-    res.json({ message: "Invalid film id"})
+    res.json({ message: "Invalid film id"});
     return
   }
 
