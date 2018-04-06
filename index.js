@@ -30,6 +30,8 @@ const Films = sequelize.define('films', {
     status: Sequelize.STRING,
 });
 
+Films.belongsTo(Genres, {foreignKey: 'genre_id'});
+
 const Artists = sequelize.define('artists', {
     name: Sequelize.STRING,
     birthday: Sequelize.STRING,
@@ -43,6 +45,9 @@ const ArtistsFilms = sequelize.define('artists_films', {
     role: Sequelize.STRING,
     description: Sequelize.STRING,
 });
+
+ArtistsFilms.belongsTo(Films, {foreignKey: 'film_id'});
+ArtistsFilms.belongsTo(Artists, {foreignKey: 'artist_id'});
 
 // START SERVER
 Promise.resolve()
