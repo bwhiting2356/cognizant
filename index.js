@@ -26,6 +26,14 @@ const Films = sequelize.define('films', {
     status: Sequelize.STRING,
 });
 
+const Artists = sequelize.define('artists', {
+    name: Sequelize.STRING,
+    birthday: Sequelize.STRING,
+    deathday: Sequelize.STRING,
+    gender: Sequelize.INTEGER,
+    place_or_birth: Sequelize.STRING,
+});
+
 // START SERVER
 Promise.resolve()
   .then(() => app.listen(PORT, () => console.log(`App listening on port ${PORT}`)))
