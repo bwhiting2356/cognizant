@@ -176,17 +176,24 @@ function getReviewsFromFilmId(id) {
   const url = 'http://credentials-api.generalassemb.ly/4576f55f-c427-4cfc-a11c-5bfe914ca6c1?films=' + id;
   return new Promise(resolve => {
     request(url, (error, response, body) => {
-      const reviews = JSON.parse(body)[0].reviews;
+      let reviews;
+      try {
+        reviews = JSON.parse(body)[0].reviews;
+      } catch(err) {
+        reviews = null;
+      }
+
       resolve(reviews);
     });
   })
 }
 
 function findAverageRating(reviews) {
-  return reviews.reduce((acc, cur) => {
+  const average = reviews.reduce((acc, cur) => {
     acc += cur.rating;
     return acc;
   }, 0) / reviews.length;
+  return parseFloat(average.toFixed(2));
 }
 
 function fetchAndMergeReviewData(film) {
