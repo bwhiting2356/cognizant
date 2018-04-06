@@ -15,7 +15,7 @@ const sequelize = new Sequelize('database', 'username', 'password', {
     storage: DB_PATH
 });
 
-const Genres = sequelize.define('genres', { // TODO: should this be plural or singular?
+const Genres = sequelize.define('genres', {
     name: Sequelize.STRING,
 },{
     timestamps: false
@@ -115,15 +115,20 @@ function getFilmRecommendations(req, res) {
       return films.filter(film => withinFifteenYears(film, releaseDate)); // only within fifteen years
     })
     .then(films => {
+      return Promise.all(
+        films.map(film => fetchAndMergeReviewData(film)) // fetch ratings and merge with film data
+      )
+    })
+    .then(mergedFilmsData => {
       const response = {
-        recommendations: [],
+        recommendations: mergedFilmsData.slice(offset, limit + offset),
         meta: {
           limit,
           offset
         }
       };
 
-      res.json(films)
+      res.json(response)
     })
     .catch(err => {
       res.statusCode = 500;
@@ -170,6 +175,28 @@ function getReviewsFromFilmId(id) {
       const reviews = JSON.parse(body)[0].reviews;
       resolve(reviews);
     });
+  })
+}
+
+function findAverageRating(reviews) {
+  return reviews.reduce((acc, cur) => {
+    acc += cur.rating;
+    return acc;
+  }, 0) / reviews.length;
+}
+
+function fetchAndMergeReviewData(film) {
+  return getReviewsFromFilmId(film.id).then(reviews => {
+    const averageRating = findAverageRating(reviews);
+
+    return {
+      id: film.id,
+      title: film.title,
+      releaseDate: film.release_date,
+      genre: film.genre.name,
+      averageRating: averageRating,
+      reviews: reviews.length
+    }
   })
 }
 
