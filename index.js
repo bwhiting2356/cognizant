@@ -68,7 +68,18 @@ app.get('/films/:id/recommendations', getFilmRecommendations);
 // ROUTE HANDLER
 function getFilmRecommendations(req, res) {
   const { id } = req.params;
-  Films.findById(id).then(film => res.json(film));
+  Films.findById(id)
+      .then(film => {
+          const response = {
+              recommendations: [],
+              meta: {
+                  limit: 10,
+                  offset: 0
+              }
+          };
+
+          res.json(response)
+      });
 }
 
 module.exports = app;
