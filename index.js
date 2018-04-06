@@ -15,6 +15,10 @@ const sequelize = new Sequelize('database', 'username', 'password', {
     storage: DB_PATH
 });
 
+const Genres = sequelize.define('genres', { // TODO: should this be plural or singular?
+    name: Sequelize.STRING,
+});
+
 const Films = sequelize.define('films', {
     title: Sequelize.STRING,
     release_date: Sequelize.STRING,
