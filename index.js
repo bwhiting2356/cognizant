@@ -103,6 +103,11 @@ function getFilmRecommendations(req, res) {
       releaseDate = new Date(film.release_date);// store this variable in outer scope for use later
 
       // Find all films with the same genre
+
+      getReviewsFromFilmId(id);
+
+
+
       // TODO: exclude the film itself from its own recommendations
       return Films.findAll({ where: { genre_id: film.genre_id }, include: [Genres]})
     })
@@ -154,6 +159,18 @@ function fifteenYearsLater(date) {
   const later = new Date(date);
   later.setFullYear(year + 15);
   return later;
+}
+
+// REVIEWS AND RATINGS
+
+function getReviewsFromFilmId(id) {
+  const url = 'http://credentials-api.generalassemb.ly/4576f55f-c427-4cfc-a11c-5bfe914ca6c1?films=' + id;
+  return new Promise(resolve => {
+    request(url, (error, response, body) => {
+      const reviews = JSON.parse(body)[0].reviews;
+      resolve(reviews);
+    });
+  })
 }
 
 module.exports = app;
