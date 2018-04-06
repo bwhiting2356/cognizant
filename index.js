@@ -15,6 +15,8 @@ const sequelize = new Sequelize('database', 'username', 'password', {
     storage: DB_PATH
 });
 
+// DATABASE SCHEMA DEFINITIONS
+
 const Genres = sequelize.define('genres', {
     name: Sequelize.STRING,
 },{
@@ -74,19 +76,19 @@ function getFilmRecommendations(req, res) {
   if (isNaN(id)) {
     res.statusCode = 422;
     res.json({ message: "Invalid film id"});
-    return
+    return;
   }
 
   if (limit && isNaN(limit)) {
     res.statusCode = 422;
     res.json({ message: "Invalid limit parameter"});
-    return
+    return;
   }
 
   if (offset && isNaN(offset)) {
     res.statusCode = 422;
     res.json({ message: "Invalid offset parameter"});
-    return
+    return;
   }
 
   // set defaults
@@ -98,22 +100,22 @@ function getFilmRecommendations(req, res) {
   Films.findById(id)
     .then(film => {
       if (!film) {
-        throw new Error("no film exists with this id")
+        throw new Error("no film exists with this id");
       }
 
-      releaseDate = new Date(film.release_date);// store this variable in outer scope for use later
-      return Films.findAll({ where: { genre_id: film.genre_id }, include: [Genres]})
+      releaseDate = new Date(film.release_date); // store this variable in the parent scope for use later
+      return Films.findAll({ where: { genre_id: film.genre_id }, include: [Genres]});
     })
     .then(films => {
       return films.filter(film => withinFifteenYears(film, releaseDate));
     })
     .then(films => {
-      return fetchAndMergeFilmReviews(films)
+      return fetchAndMergeFilmReviews(films);
     })
     .then(mergedFilmsData => {
       return mergedFilmsData
           .filter(minimumRatingAndReviewCount)
-          .sort((a, b) => a.id - b.id)
+          .sort((a, b) => a.id - b.id);
       }
     )
     .then(sortedFilms => {
@@ -125,7 +127,7 @@ function getFilmRecommendations(req, res) {
         }
       };
 
-      res.json(response)
+      res.json(response);
     })
     .catch(err => {
       res.statusCode = 500;
