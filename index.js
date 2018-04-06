@@ -100,28 +100,21 @@ function getFilmRecommendations(req, res) {
       if (!film) {
         throw new Error("no film exists with this id")
       }
+
       releaseDate = new Date(film.release_date);// store this variable in outer scope for use later
-
-      // Find all films with the same genre
-
-      getReviewsFromFilmId(id);
-
-
-
-      // TODO: exclude the film itself from its own recommendations
       return Films.findAll({ where: { genre_id: film.genre_id }, include: [Genres]})
     })
     .then(films => {
-      return films.filter(film => withinFifteenYears(film, releaseDate)); // only within fifteen years
+      return films.filter(film => withinFifteenYears(film, releaseDate));
     })
     .then(films => {
-      return Promise.all(
-        films.map(film => fetchAndMergeReviewData(film)) // fetch ratings and merge with film data
-      )
+      return fetchAndMergeFilmReviews(films)
     })
-    .then(mergedFilmsData => mergedFilmsData
-      .filter(minimumRatingAndReviewCount)
-      .sort((a, b) => a.id - b.id)
+    .then(mergedFilmsData => {
+      return mergedFilmsData
+          .filter(minimumRatingAndReviewCount)
+          .sort((a, b) => a.id - b.id)
+      }
     )
     .then(sortedFilms => {
       const response = {
@@ -172,19 +165,18 @@ function fifteenYearsLater(date) {
 
 // REVIEWS AND RATINGS
 
-function getReviewsFromFilmId(id) {
-  const url = 'http://credentials-api.generalassemb.ly/4576f55f-c427-4cfc-a11c-5bfe914ca6c1?films=' + id;
+function fetchAndMergeFilmReviews(films) {
+  const ids = films.map(film => film.id).join(",");
+  const url = 'http://credentials-api.generalassemb.ly/4576f55f-c427-4cfc-a11c-5bfe914ca6c1?films=' + ids;
   return new Promise(resolve => {
     request(url, (error, response, body) => {
       let reviews;
       try {
-        reviews = JSON.parse(body)[0].reviews;
+        reviews = JSON.parse(body);
       } catch(err) {
-        console.log("error: ", err);
-        reviews = null;
+        reviews = [];
       }
-
-      resolve(reviews);
+      resolve(mergeFilmsWithReviews(films, reviews));
     });
   })
 }
@@ -197,17 +189,19 @@ function findAverageRating(reviews) {
   return parseFloat(average.toFixed(2));
 }
 
-function fetchAndMergeReviewData(film) {
-  return getReviewsFromFilmId(film.id).then(reviews => {
-    const averageRating = findAverageRating(reviews);
-
+function mergeFilmsWithReviews(films, allReviews) {
+  if (!allReviews.length) {
+    throw new Error('no films found')
+  }
+  return films.map((film, i) => {
+    const filmReviews = allReviews[i].reviews;
     return {
       id: film.id,
       title: film.title,
       releaseDate: film.release_date,
       genre: film.genre.name,
-      averageRating: averageRating,
-      reviews: reviews.length
+      averageRating: findAverageRating(filmReviews),
+      reviews: filmReviews.length
     }
   })
 }
