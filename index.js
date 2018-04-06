@@ -64,6 +64,7 @@ Promise.resolve()
 
 // ROUTES
 app.get('/films/:id/recommendations', getFilmRecommendations);
+app.get('/*', errorHandler);
 
 // ROUTE HANDLER
 function getFilmRecommendations(req, res) {
@@ -105,6 +106,12 @@ function getFilmRecommendations(req, res) {
 
           res.json(response)
       });
+}
+
+function errorHandler(req, res) {
+  res.statusCode = 404;
+  res.json({message: 'not a valid route'})
+
 }
 
 module.exports = app;
