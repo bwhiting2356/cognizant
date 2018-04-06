@@ -64,13 +64,12 @@ Promise.resolve()
 
 // ROUTES
 app.get('/films/:id/recommendations', getFilmRecommendations);
-app.get('/*', errorHandler);
+app.get('/*', errorRouteHandler);
 
 // ROUTE HANDLER
 function getFilmRecommendations(req, res) {
   const { id } = req.params;
   let { limit, offset } = req.query;
-
 
   if (isNaN(id)) {
     res.statusCode = 422;
@@ -94,24 +93,67 @@ function getFilmRecommendations(req, res) {
   limit = limit || 10;
   offset = offset || 0;
 
-  Films.findById(id)
-      .then(film => {
-          const response = {
-              recommendations: [],
-              meta: {
-                  limit,
-                  offset
-              }
-          };
+  let releaseDate;
 
-          res.json(response)
-      });
+  Films.findById(id)
+    .then(film => {
+      if (!film) {
+        throw new Error("no film exists with this id")
+      }
+      releaseDate = new Date(film.release_date);// store this variable in outer scope for use later
+
+      // Find all films with the same genre
+      // TODO: exclude the film itself from its own recommendations
+      return Films.findAll({ where: { genre_id: film.genre_id }, include: [Genres]})
+    })
+    .then(films => {
+      return films.filter(film => withinFifteenYears(film, releaseDate)); // only within fifteen years
+    })
+    .then(films => {
+      const response = {
+        recommendations: [],
+        meta: {
+          limit,
+          offset
+        }
+      };
+
+      res.json(films)
+    })
+    .catch(err => {
+      res.statusCode = 500;
+      res.json({ message: err.message });
+    })
 }
 
-function errorHandler(req, res) {
+// ERROR ROUTE HANDLER
+
+function errorRouteHandler(req, res) {
   res.statusCode = 404;
   res.json({message: 'not a valid route'})
+}
 
+// ********** HELPER FUNCTIONS **********
+
+// WITHIN FIFTEEN YEARS
+
+function withinFifteenYears(otherFilm, parentFilm) {
+  const otherFilmDate = new Date(otherFilm.release_date);
+  return otherFilmDate >= fifteenYearsEarlier(parentFilm) || otherFilmDate <= fifteenYearsLater(parentFilm);
+}
+
+function fifteenYearsEarlier(date) {
+  const year = date.getFullYear();
+  const earlier = new Date(date);
+  earlier.setFullYear(year - 15);
+  return earlier;
+}
+
+function fifteenYearsLater(date) {
+  const year = date.getFullYear();
+  const later = new Date(date);
+  later.setFullYear(year + 15);
+  return later;
 }
 
 module.exports = app;
