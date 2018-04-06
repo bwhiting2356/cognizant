@@ -15,6 +15,17 @@ const sequelize = new Sequelize('database', 'username', 'password', {
     storage: DB_PATH
 });
 
+const Films = sequelize.define('films', {
+    title: Sequelize.STRING,
+    release_date: Sequelize.STRING,
+    tagline: Sequelize.STRING,
+    revenue: Sequelize.INTEGER,
+    budget: Sequelize.INTEGER,
+    runtime: Sequelize.INTEGER,
+    original_language: Sequelize.STRING,
+    status: Sequelize.STRING,
+});
+
 // START SERVER
 Promise.resolve()
   .then(() => app.listen(PORT, () => console.log(`App listening on port ${PORT}`)))
