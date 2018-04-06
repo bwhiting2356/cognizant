@@ -68,13 +68,38 @@ app.get('/films/:id/recommendations', getFilmRecommendations);
 // ROUTE HANDLER
 function getFilmRecommendations(req, res) {
   const { id } = req.params;
+  let { limit, offset } = req.query;
+
+
+  if (isNaN(id)) {
+    res.statusCode = 422;
+    res.json({ message: "Invalid film id"})
+    return
+  }
+
+  if (limit && isNaN(limit)) {
+    res.statusCode = 422;
+    res.json({ message: "Invalid limit parameter"});
+    return
+  }
+
+  if (offset && isNaN(offset)) {
+    res.statusCode = 422;
+    res.json({ message: "Invalid offset parameter"});
+    return
+  }
+
+  // set defaults
+  limit = limit || 10;
+  offset = offset || 0;
+
   Films.findById(id)
       .then(film => {
           const response = {
               recommendations: [],
               meta: {
-                  limit: 10,
-                  offset: 0
+                  limit,
+                  offset
               }
           };
 
