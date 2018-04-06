@@ -90,8 +90,8 @@ function getFilmRecommendations(req, res) {
   }
 
   // set defaults
-  limit = limit || 10;
-  offset = offset || 0;
+  limit = parseInt(limit) || 10;
+  offset = parseInt(offset) || 0;
 
   let releaseDate;
 
@@ -119,9 +119,13 @@ function getFilmRecommendations(req, res) {
         films.map(film => fetchAndMergeReviewData(film)) // fetch ratings and merge with film data
       )
     })
-    .then(mergedFilmsData => {
+    .then(mergedFilmsData => mergedFilmsData
+      .filter(minimumRatingAndReviews)
+      .sort((a, b) => a.id - b.id)
+    )
+    .then(sortedFilms => {
       const response = {
-        recommendations: mergedFilmsData.slice(offset, limit + offset),
+        recommendations: sortedFilms.slice(offset, limit + offset),
         meta: {
           limit,
           offset
@@ -143,7 +147,7 @@ function errorRouteHandler(req, res) {
   res.json({message: 'not a valid route'})
 }
 
-// ********** HELPER FUNCTIONS **********
+// ********** HELPER FUNCTIONS ********** //
 
 // WITHIN FIFTEEN YEARS
 
@@ -198,6 +202,10 @@ function fetchAndMergeReviewData(film) {
       reviews: reviews.length
     }
   })
+}
+
+function minimumRatingAndReviews(film) {
+  return film.averageRating >= 4 && film.reviews >= 5 // filter for minimum rating and review count
 }
 
 module.exports = app;
