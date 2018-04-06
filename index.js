@@ -17,6 +17,8 @@ const sequelize = new Sequelize('database', 'username', 'password', {
 
 const Genres = sequelize.define('genres', { // TODO: should this be plural or singular?
     name: Sequelize.STRING,
+},{
+    timestamps: false
 });
 
 const Films = sequelize.define('films', {
@@ -28,6 +30,8 @@ const Films = sequelize.define('films', {
     runtime: Sequelize.INTEGER,
     original_language: Sequelize.STRING,
     status: Sequelize.STRING,
+},{
+    timestamps: false
 });
 
 Films.belongsTo(Genres, {foreignKey: 'genre_id'});
@@ -38,12 +42,16 @@ const Artists = sequelize.define('artists', {
     deathday: Sequelize.STRING,
     gender: Sequelize.INTEGER,
     place_or_birth: Sequelize.STRING,
+},{
+    timestamps: false
 });
 
 const ArtistsFilms = sequelize.define('artists_films', {
     credit_type: Sequelize.STRING,
     role: Sequelize.STRING,
     description: Sequelize.STRING,
+},{
+    timestamps: false
 });
 
 ArtistsFilms.belongsTo(Films, {foreignKey: 'film_id'});
@@ -59,7 +67,8 @@ app.get('/films/:id/recommendations', getFilmRecommendations);
 
 // ROUTE HANDLER
 function getFilmRecommendations(req, res) {
-  res.status(500).send('Not Implemented');
+  const { id } = req.params;
+  Films.findById(id).then(film => res.json(film));
 }
 
 module.exports = app;
