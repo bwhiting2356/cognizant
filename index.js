@@ -6,6 +6,15 @@ const sqlite = require('sqlite'),
 
 const { PORT=3000, NODE_ENV='development', DB_PATH='./db/database.db' } = process.env;
 
+const sequelize = new Sequelize('database', 'username', 'password', {
+    host: 'localhost',
+    dialect: 'sqlite',
+    logging: false,
+
+    // SQLite only
+    storage: DB_PATH
+});
+
 // START SERVER
 Promise.resolve()
   .then(() => app.listen(PORT, () => console.log(`App listening on port ${PORT}`)))
