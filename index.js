@@ -120,7 +120,7 @@ function getFilmRecommendations(req, res) {
       )
     })
     .then(mergedFilmsData => mergedFilmsData
-      .filter(minimumRatingAndReviews)
+      .filter(minimumRatingAndReviewCount)
       .sort((a, b) => a.id - b.id)
     )
     .then(sortedFilms => {
@@ -180,6 +180,7 @@ function getReviewsFromFilmId(id) {
       try {
         reviews = JSON.parse(body)[0].reviews;
       } catch(err) {
+        console.log("error: ", err);
         reviews = null;
       }
 
@@ -211,7 +212,7 @@ function fetchAndMergeReviewData(film) {
   })
 }
 
-function minimumRatingAndReviews(film) {
+function minimumRatingAndReviewCount(film) {
   return film.averageRating >= 4 && film.reviews >= 5 // filter for minimum rating and review count
 }
 
